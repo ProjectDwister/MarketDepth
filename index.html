@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <title>Market Depth</title>
+  <title>Market Depth for InvITs, REITs and SM REITs</title>
 
   <style>
     :root {
@@ -45,6 +45,7 @@
     .page-title {
       font-size: 20px;
       font-weight: 600;
+      letter-spacing: 0.2px;
     }
 
     .page-subtitle {
@@ -70,6 +71,10 @@
       cursor: pointer;
     }
 
+    .refresh-button:hover {
+      background: #2a303b;
+    }
+
     .grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
@@ -82,26 +87,47 @@
       border-radius: 12px;
       overflow: hidden;
       box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+      transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-2px);
+      border-color: #343b49;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+    }
+
+    .card.up-card {
+      border-left: 3px solid rgba(76, 217, 100, 0.75);
+    }
+
+    .card.down-card {
+      border-left: 3px solid rgba(255, 91, 87, 0.75);
     }
 
     .card-top {
-      padding: 12px 14px 8px;
+      padding: 14px 16px 10px;
       display: flex;
       justify-content: space-between;
       align-items: flex-start;
-      gap: 12px;
+      gap: 14px;
     }
 
     .symbol-line {
       display: flex;
       align-items: center;
       gap: 8px;
+      min-width: 0;
     }
 
     .symbol {
       color: var(--green);
-      font-weight: 600;
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 0.2px;
       white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 220px;
     }
 
     .exchange {
@@ -128,9 +154,29 @@
 
     .price-meta {
       display: flex;
-      gap: 12px;
+      flex-direction: column;
+      gap: 3px;
+      align-items: flex-end;
+      justify-content: flex-start;
+    }
+
+    .ltp {
+      color: var(--green);
+      font-size: 18px;
+      font-weight: 700;
+      line-height: 1.1;
+    }
+
+    .ltp.negative {
+      color: var(--red);
+    }
+
+    .change-line {
+      display: flex;
+      gap: 8px;
       align-items: center;
       justify-content: flex-end;
+      font-size: 12px;
     }
 
     .change {
@@ -141,17 +187,17 @@
       color: var(--red);
     }
 
-    .ltp {
-      color: var(--green);
-      font-weight: 600;
-    }
-
-    .ltp.negative {
-      color: var(--red);
-    }
-
     .depth {
-      padding: 8px 10px 10px;
+      padding: 10px 12px 12px;
+    }
+
+    .section-title {
+      color: var(--muted);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      margin-bottom: 8px;
     }
 
     .depth-header,
@@ -167,11 +213,19 @@
       color: var(--muted);
       font-size: 11px;
       margin-bottom: 6px;
+      padding-bottom: 5px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.035);
     }
 
     .depth-row {
-      height: 24px;
+      height: 28px;
+      position: relative;
       font-variant-numeric: tabular-nums;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.025);
+    }
+
+    .depth-row:last-child {
+      border-bottom: none;
     }
 
     .bid {
@@ -220,6 +274,7 @@
     .total-row {
       margin-top: 4px;
       padding-top: 4px;
+      color: var(--text);
       font-weight: 500;
       font-variant-numeric: tabular-nums;
     }
@@ -280,8 +335,8 @@
       background: #4caf50;
       position: absolute;
       top: 8px;
-      left: 30%;
-      right: 12%;
+      left: 0;
+      width: 50%;
     }
 
     .range-dot {
@@ -303,6 +358,15 @@
       position: absolute;
       top: 3px;
       transform: translateX(-50%);
+    }
+
+    .range-labels {
+      display: flex;
+      justify-content: space-between;
+      color: var(--muted);
+      font-size: 10px;
+      margin-top: -6px;
+      margin-bottom: 10px;
     }
 
     .status {
@@ -340,6 +404,10 @@
         grid-template-columns: 1fr;
       }
 
+      .card {
+        border-radius: 10px;
+      }
+
       .depth-header,
       .depth-row,
       .total-row {
@@ -353,8 +421,8 @@
 <body>
   <div class="page-header">
     <div>
-      <div class="page-title">Market Depth</div>
-      <div class="page-subtitle">NSE / BSE live depth from Google Sheet</div>
+      <div class="page-title">Market Depth for InvITs, REITs and SM REITs</div>
+      <div class="page-subtitle">NSE / BSE live depth</div>
     </div>
 
     <div class="refresh-row">
@@ -420,6 +488,7 @@
       const changeClass = isNegative ? 'change negative' : 'change';
       const ltpClass = isNegative ? 'ltp negative' : 'ltp';
       const arrow = isNegative ? '⌄' : '⌃';
+      const movementClass = isNegative ? 'down-card' : 'up-card';
 
       const buyRows = item.buy || [];
       const sellRows = item.sell || [];
@@ -439,7 +508,7 @@
       const prevClosePosition = rangePosition(item.low, item.high, item.prevClose);
 
       return `
-        <div class="card">
+        <div class="card ${movementClass}">
           <div class="card-top">
             <div>
               <div class="symbol-line">
@@ -451,14 +520,18 @@
 
             <div class="price-area">
               <div class="price-meta">
-                <span>${fmtSigned(item.change)}</span>
-                <span class="${changeClass}">${fmtPct(item.changePct)} ${arrow}</span>
                 <span class="${ltpClass}">${fmt(item.lastPrice)}</span>
+                <div class="change-line">
+                  <span>${fmtSigned(item.change)}</span>
+                  <span class="${changeClass}">${fmtPct(item.changePct)} ${arrow}</span>
+                </div>
               </div>
             </div>
           </div>
 
           <div class="depth">
+            <div class="section-title">Market Depth</div>
+
             <div class="depth-header">
               <div>Bid</div>
               <div class="orders">Orders</div>
@@ -481,6 +554,8 @@
           </div>
 
           <div class="metrics">
+            <div class="section-title">Day Range</div>
+
             <div class="metric-grid">
               <div class="metric">
                 <span class="metric-label">Open</span>
@@ -503,9 +578,14 @@
 
             <div class="range-wrap">
               <div class="range-line"></div>
-              <div class="range-fill"></div>
+              <div class="range-fill" style="left:0%; width:${ltpPosition}%"></div>
               <div class="range-dot" style="left:${ltpPosition}%"></div>
               <div class="range-triangle" style="left:${prevClosePosition}%"></div>
+            </div>
+
+            <div class="range-labels">
+              <span>Low ${fmt(item.low)}</span>
+              <span>High ${fmt(item.high)}</span>
             </div>
 
             <div class="metric-grid">
@@ -527,10 +607,6 @@
                 <span class="metric-value">${fmtInt(item.totalSellQty)}</span>
               </div>
 
-              <div class="metric">
-                <span class="metric-label">OI</span>
-                <span class="metric-value">${fmtInt(item.oi)}</span>
-              </div>
               <div class="metric">
                 <span class="metric-label">Updated</span>
                 <span class="metric-value">${esc(item.updatedAt || '')}</span>
