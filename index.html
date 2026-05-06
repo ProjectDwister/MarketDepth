@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Market Depth</title>
+
+  <style>
+    :root {
+      --bg: #0f1115;
+      --card: #15181d;
+      --card2: #111318;
+      --line: #242832;
+      --text: #d8dee9;
+      --muted: #7f8794;
+      --green: #4cd964;
+      --red: #ff5b57;
+      --blue: #2f80ff;
+      --bidShade: rgba(47, 128, 255, 0.16);
+      --askShade: rgba(255, 91, 87, 0.14);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 20px;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 13px;
+    }
+
+    .page-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .page-title {
+      font-size: 20px;
+      font-weight: 600;
+    }
+
+    .page-subtitle {
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 4px;
+    }
+
+    .refresh-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .refresh-button {
+      background: #20242d;
+      color: var(--text);
+      border: 1px solid #303642;
+      border-radius: 8px;
+      padding: 8px 12px;
+      cursor: pointer;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+      gap: 16px;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid #20242d;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+    }
+
+    .card-top {
+      padding: 12px 14px 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+    }
+
+    .symbol-line {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .symbol {
+      color: var(--green);
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .exchange {
+      color: var(--muted);
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.6px;
+    }
+
+    .name {
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 11px;
+      max-width: 260px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .price-area {
+      text-align: right;
+      white-space: nowrap;
+    }
+
+    .price-meta {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      justify-content: flex-end;
+    }
+
+    .change {
+      color: var(--green);
+    }
+
+    .change.negative {
+      color: var(--red);
+    }
+
+    .ltp {
+      color: var(--green);
+      font-weight: 600;
+    }
+
+    .ltp.negative {
+      color: var(--red);
+    }
+
+    .depth {
+      padding: 8px 10px 10px;
+    }
+
+    .depth-header,
+    .depth-row,
+    .total-row {
+      display: grid;
+      grid-template-columns: 1fr 0.9fr 1fr 1fr 0.9fr 1fr;
+      column-gap: 10px;
+      align-items: center;
+    }
+
+    .depth-header {
+      color: var(--muted);
+      font-size: 11px;
+      margin-bottom: 6px;
+    }
+
+    .depth-row {
+      height: 24px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .bid {
+      color: var(--blue);
+    }
+
+    .ask,
+    .offer {
+      color: var(--red);
+    }
+
+    .orders,
+    .qty {
+      text-align: right;
+    }
+
+    .bar-cell {
+      position: relative;
+      text-align: right;
+      padding: 4px 4px;
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    .bar {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      right: 0;
+      z-index: 0;
+    }
+
+    .bid-bar {
+      background: var(--bidShade);
+    }
+
+    .ask-bar {
+      background: var(--askShade);
+    }
+
+    .bar-text {
+      position: relative;
+      z-index: 1;
+    }
+
+    .total-row {
+      margin-top: 4px;
+      padding-top: 4px;
+      font-weight: 500;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .total-label-buy {
+      color: var(--blue);
+    }
+
+    .total-label-sell {
+      color: var(--red);
+    }
+
+    .metrics {
+      background: var(--card2);
+      border-top: 1px solid var(--line);
+      padding: 12px 14px 14px;
+    }
+
+    .metric-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px 20px;
+    }
+
+    .metric {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .metric-label {
+      color: var(--muted);
+    }
+
+    .metric-value {
+      color: #dce7f7;
+      text-align: right;
+    }
+
+    .range-wrap {
+      margin: 12px 0 14px;
+      height: 18px;
+      position: relative;
+    }
+
+    .range-line {
+      height: 2px;
+      background: #2b3039;
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 8px;
+    }
+
+    .range-fill {
+      height: 2px;
+      background: #4caf50;
+      position: absolute;
+      top: 8px;
+      left: 30%;
+      right: 12%;
+    }
+
+    .range-dot {
+      width: 6px;
+      height: 6px;
+      background: #7f8794;
+      border-radius: 50%;
+      position: absolute;
+      top: 6px;
+      transform: translateX(-50%);
+    }
+
+    .range-triangle {
+      width: 0;
+      height: 0;
+      border-left: 4px solid transparent;
+      border-right: 4px solid transparent;
+      border-bottom: 7px solid #7f8794;
+      position: absolute;
+      top: 3px;
+      transform: translateX(-50%);
+    }
+
+    .status {
+      color: #f7c948;
+      font-size: 11px;
+      margin-top: 10px;
+      line-height: 1.35;
+    }
+
+    .loading,
+    .empty,
+    .error {
+      color: var(--muted);
+      padding: 24px;
+      background: var(--card);
+      border: 1px solid #20242d;
+      border-radius: 12px;
+    }
+
+    .error {
+      color: var(--red);
+    }
+
+    @media (max-width: 480px) {
+      body {
+        padding: 12px;
+      }
+
+      .page-header {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .grid {
+        grid-template-columns: 1fr;
+      }
+
+      .depth-header,
+      .depth-row,
+      .total-row {
+        grid-template-columns: 0.8fr 0.75fr 0.85fr 0.85fr 0.75fr 0.85fr;
+        column-gap: 6px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="page-header">
+    <div>
+      <div class="page-title">Market Depth</div>
+      <div class="page-subtitle">NSE / BSE live depth from Google Sheet</div>
+    </div>
+
+    <div class="refresh-row">
+      <span id="lastRefresh">Loading...</span>
+      <button class="refresh-button" onclick="loadData()">Refresh</button>
+    </div>
+  </div>
+
+  <div id="app" class="loading">Loading market depth...</div>
+
+  <script>
+    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw9Dze__HpwGhmHCmJ6icKzkc2-neEYfp7fod0lvAyBxrlNvWOyFbgs16ql9aNjM4U7/exec';
+    const REFRESH_MS = 60000;
+
+    function loadData() {
+      document.getElementById('lastRefresh').textContent = 'Refreshing...';
+
+      const oldScript = document.getElementById('marketDepthJsonp');
+      if (oldScript) oldScript.remove();
+
+      const script = document.createElement('script');
+      script.id = 'marketDepthJsonp';
+      script.src =
+        APPS_SCRIPT_URL +
+        '?callback=renderMarketDepth&_=' +
+        Date.now();
+
+      script.onerror = function () {
+        showError('Could not load Apps Script API. Check deployment access and URL.');
+      };
+
+      document.body.appendChild(script);
+    }
+
+    function renderMarketDepth(payload) {
+      if (!payload || !payload.ok) {
+        showError(payload && payload.error ? payload.error : 'API returned an error.');
+        return;
+      }
+
+      render(payload.data || [], payload.generatedAt || '');
+    }
+
+    function render(data, generatedAt) {
+      const app = document.getElementById('app');
+
+      document.getElementById('lastRefresh').textContent =
+        'Last loaded: ' + new Date().toLocaleTimeString('en-IN') +
+        (generatedAt ? ' | Data: ' + generatedAt : '');
+
+      if (!data || !data.length) {
+        app.className = 'empty';
+        app.innerHTML = 'No market-depth data found. Run updateMarketDepthDebug() in Apps Script first.';
+        return;
+      }
+
+      app.className = 'grid';
+      app.innerHTML = data.map(renderCard).join('');
+    }
+
+    function renderCard(item) {
+      const isNegative = Number(item.change) < 0;
+      const changeClass = isNegative ? 'change negative' : 'change';
+      const ltpClass = isNegative ? 'ltp negative' : 'ltp';
+      const arrow = isNegative ? '⌄' : '⌃';
+
+      const buyRows = item.buy || [];
+      const sellRows = item.sell || [];
+      const maxQty = Math.max(
+        1,
+        ...buyRows.map(x => Number(x.qty || 0)),
+        ...sellRows.map(x => Number(x.qty || 0))
+      );
+
+      const depthRows = [];
+
+      for (let i = 0; i < 5; i++) {
+        depthRows.push(renderDepthRow(buyRows[i], sellRows[i], maxQty));
+      }
+
+      const ltpPosition = rangePosition(item.low, item.high, item.lastPrice);
+      const prevClosePosition = rangePosition(item.low, item.high, item.prevClose);
+
+      return `
+        <div class="card">
+          <div class="card-top">
+            <div>
+              <div class="symbol-line">
+                <span class="symbol">${esc(item.tradingSymbol || item.input)}</span>
+                <span class="exchange">${esc(item.exchange)}</span>
+              </div>
+              <div class="name">${esc(item.name || '')}</div>
+            </div>
+
+            <div class="price-area">
+              <div class="price-meta">
+                <span>${fmtSigned(item.change)}</span>
+                <span class="${changeClass}">${fmtPct(item.changePct)} ${arrow}</span>
+                <span class="${ltpClass}">${fmt(item.lastPrice)}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="depth">
+            <div class="depth-header">
+              <div>Bid</div>
+              <div class="orders">Orders</div>
+              <div class="qty">Qty.</div>
+              <div>Offer</div>
+              <div class="orders">Orders</div>
+              <div class="qty">Qty.</div>
+            </div>
+
+            ${depthRows.join('')}
+
+            <div class="total-row">
+              <div class="total-label-buy">Total</div>
+              <div></div>
+              <div class="qty bid">${fmtInt(item.totalBuyQty)}</div>
+              <div class="total-label-sell">Total</div>
+              <div></div>
+              <div class="qty ask">${fmtInt(item.totalSellQty)}</div>
+            </div>
+          </div>
+
+          <div class="metrics">
+            <div class="metric-grid">
+              <div class="metric">
+                <span class="metric-label">Open</span>
+                <span class="metric-value">${fmt(item.open)}</span>
+              </div>
+              <div class="metric">
+                <span class="metric-label">Prev. Close</span>
+                <span class="metric-value">${fmt(item.prevClose)}</span>
+              </div>
+
+              <div class="metric">
+                <span class="metric-label">Low</span>
+                <span class="metric-value">${fmt(item.low)}</span>
+              </div>
+              <div class="metric">
+                <span class="metric-label">High</span>
+                <span class="metric-value">${fmt(item.high)}</span>
+              </div>
+            </div>
+
+            <div class="range-wrap">
+              <div class="range-line"></div>
+              <div class="range-fill"></div>
+              <div class="range-dot" style="left:${ltpPosition}%"></div>
+              <div class="range-triangle" style="left:${prevClosePosition}%"></div>
+            </div>
+
+            <div class="metric-grid">
+              <div class="metric">
+                <span class="metric-label">Volume</span>
+                <span class="metric-value">${fmtInt(item.volume)}</span>
+              </div>
+              <div class="metric">
+                <span class="metric-label">Avg. price</span>
+                <span class="metric-value">${fmt(item.avgPrice)}</span>
+              </div>
+
+              <div class="metric">
+                <span class="metric-label">Total Buy</span>
+                <span class="metric-value">${fmtInt(item.totalBuyQty)}</span>
+              </div>
+              <div class="metric">
+                <span class="metric-label">Total Sell</span>
+                <span class="metric-value">${fmtInt(item.totalSellQty)}</span>
+              </div>
+
+              <div class="metric">
+                <span class="metric-label">OI</span>
+                <span class="metric-value">${fmtInt(item.oi)}</span>
+              </div>
+              <div class="metric">
+                <span class="metric-label">Updated</span>
+                <span class="metric-value">${esc(item.updatedAt || '')}</span>
+              </div>
+            </div>
+
+            ${item.status ? `<div class="status">${esc(item.status)}</div>` : ''}
+          </div>
+        </div>
+      `;
+    }
+
+    function renderDepthRow(buy, sell, maxQty) {
+      buy = buy || {};
+      sell = sell || {};
+
+      const buyPct = Math.min(100, Number(buy.qty || 0) / maxQty * 100);
+      const sellPct = Math.min(100, Number(sell.qty || 0) / maxQty * 100);
+
+      return `
+        <div class="depth-row">
+          <div class="bid">${fmt(buy.price)}</div>
+          <div class="orders bid">${fmtInt(buy.orders)}</div>
+          <div class="bar-cell qty bid">
+            <div class="bar bid-bar" style="width:${buyPct}%"></div>
+            <span class="bar-text">${fmtInt(buy.qty)}</span>
+          </div>
+
+          <div class="offer">${fmt(sell.price)}</div>
+          <div class="orders ask">${fmtInt(sell.orders)}</div>
+          <div class="bar-cell qty ask">
+            <div class="bar ask-bar" style="width:${sellPct}%"></div>
+            <span class="bar-text">${fmtInt(sell.qty)}</span>
+          </div>
+        </div>
+      `;
+    }
+
+    function rangePosition(low, high, value) {
+      low = Number(low || 0);
+      high = Number(high || 0);
+      value = Number(value || 0);
+
+      if (!low || !high || high <= low) return 50;
+
+      const pct = ((value - low) / (high - low)) * 100;
+
+      return Math.max(0, Math.min(100, pct));
+    }
+
+    function fmt(value) {
+      const n = Number(value || 0);
+      if (!n) return '';
+
+      return n.toLocaleString('en-IN', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      });
+    }
+
+    function fmtSigned(value) {
+      const n = Number(value || 0);
+      if (!n) return '';
+
+      const sign = n > 0 ? '+' : '';
+
+      return sign + n.toLocaleString('en-IN', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      });
+    }
+
+    function fmtPct(value) {
+      const n = Number(value || 0);
+
+      return n.toLocaleString('en-IN', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      }) + '%';
+    }
+
+    function fmtInt(value) {
+      const n = Number(value || 0);
+      if (!n) return '';
+
+      return Math.round(n).toLocaleString('en-IN');
+    }
+
+    function esc(value) {
+      return String(value || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    function showError(error) {
+      const app = document.getElementById('app');
+      app.className = 'error';
+      app.innerHTML = 'Error loading market depth: ' + esc(error);
+      document.getElementById('lastRefresh').textContent = 'Load failed';
+    }
+
+    loadData();
+    setInterval(loadData, REFRESH_MS);
+  </script>
+</body>
+</html>
