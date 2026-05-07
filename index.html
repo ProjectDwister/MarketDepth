@@ -1004,13 +1004,7 @@
       return Math.round(n).toLocaleString('en-IN');
     }
 
-    function cssEscape(value) {
-      if (window.CSS && CSS.escape) {
-        return CSS.escape(value);
-      }
-
-      return String(value).replace(/"/g, '\\"');
-    }
+    cssEscape()
 
     function esc(value) {
       return String(value || '')
@@ -1022,13 +1016,13 @@
     }
 
     function escAttr(value) {
-      return String(value || '')
-        .replace(/\\/g, '\\\\')
-        .replace(/'/g, "\\'")
-        .replace(/"/g, '&quot;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;');
-    }
+     return String(value || '')
+    .replaceAll('\\', '\\\\')
+    .replaceAll("'", "\\'")
+    .replaceAll('"', '&quot;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;');
+}
 
     function showError(error) {
       const app = document.getElementById('app');
