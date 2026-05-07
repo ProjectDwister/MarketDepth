@@ -588,6 +588,7 @@
     }
 
     function renderMarketDepth(payload) {
+      console.log('Market depth payload:', payload);
       if (!payload || !payload.ok) {
         showError(payload && payload.error ? payload.error : 'API returned an error.');
         return;
