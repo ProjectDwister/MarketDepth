@@ -588,6 +588,7 @@
 
     function renderMarketDepth(payload) {
       console.log('Market depth payload:', payload);
+
       if (!payload || !payload.ok) {
         showError(payload && payload.error ? payload.error : 'API returned an error.');
         return;
@@ -1003,26 +1004,33 @@
       return Math.round(n).toLocaleString('en-IN');
     }
 
-    cssEscape()
-
     function cssEscape(value) {
-  if (window.CSS && CSS.escape) {
-    return CSS.escape(value);
-  }
+      if (window.CSS && CSS.escape) {
+        return CSS.escape(value);
+      }
 
-  return String(value || '')
-    .replaceAll('\\', '\\\\')
-    .replaceAll('"', '\\"');
-}
+      return String(value || '')
+        .replaceAll('\\', '\\\\')
+        .replaceAll('"', '\\"');
+    }
+
+    function esc(value) {
+      return String(value || '')
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#039;');
+    }
 
     function escAttr(value) {
-     return String(value || '')
-    .replaceAll('\\', '\\\\')
-    .replaceAll("'", "\\'")
-    .replaceAll('"', '&quot;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;');
-}
+      return String(value || '')
+        .replaceAll('\\', '\\\\')
+        .replaceAll("'", "\\'")
+        .replaceAll('"', '&quot;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;');
+    }
 
     function showError(error) {
       const app = document.getElementById('app');
