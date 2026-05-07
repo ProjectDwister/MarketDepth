@@ -6,6 +6,8 @@
 
   <title>Market Depth for InvITs, REITs and SM REITs</title>
 
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+
   <style>
     :root {
       --bg: #0f1115;
@@ -62,17 +64,40 @@
       font-size: 12px;
     }
 
-    .refresh-button {
+    .refresh-button,
+    .snapshot-button {
       background: #20242d;
       color: var(--text);
       border: 1px solid #303642;
       border-radius: 8px;
       padding: 8px 12px;
       cursor: pointer;
+      font-size: 12px;
     }
 
-    .refresh-button:hover {
+    .refresh-button:hover,
+    .snapshot-button:hover {
       background: #2a303b;
+    }
+
+    .snapshot-controls {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .snapshot-button.primary {
+      background: #2f80ff;
+      border-color: #2f80ff;
+      color: white;
+    }
+
+    .snapshot-button.danger {
+      background: rgba(255, 91, 87, 0.14);
+      border-color: rgba(255, 91, 87, 0.35);
+      color: #ff8a86;
     }
 
     .grid {
@@ -102,6 +127,33 @@
 
     .card.down-card {
       border-left: 3px solid rgba(255, 91, 87, 0.75);
+    }
+
+    .select-card-wrap {
+      display: none;
+      padding: 10px 16px 0;
+    }
+
+    .snapshot-mode .select-card-wrap {
+      display: block;
+    }
+
+    .card-select-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      color: var(--muted);
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .card-select-label input {
+      accent-color: #2f80ff;
+    }
+
+    .card.selected-for-snapshot {
+      outline: 2px solid rgba(47, 128, 255, 0.75);
+      outline-offset: -2px;
     }
 
     .card-top {
@@ -139,12 +191,20 @@
 
     .name {
       margin-top: 4px;
-      color: var(--muted);
       font-size: 11px;
       max-width: 260px;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
+      color: var(--muted);
+    }
+
+    .name.positive {
+      color: var(--green);
+    }
+
+    .name.negative {
+      color: var(--red);
     }
 
     .price-area {
@@ -390,6 +450,43 @@
       color: var(--red);
     }
 
+    .snapshot-stage {
+      position: fixed;
+      left: -99999px;
+      top: 0;
+      width: 1080px;
+      background: #0f1115;
+      color: var(--text);
+      padding: 28px;
+    }
+
+    .snapshot-stage .snapshot-title {
+      font-size: 28px;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .snapshot-stage .snapshot-meta {
+      color: var(--muted);
+      font-size: 14px;
+      margin-bottom: 22px;
+    }
+
+    .snapshot-stage .snapshot-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 18px;
+    }
+
+    .snapshot-stage .card {
+      width: 100%;
+      box-shadow: none;
+    }
+
+    .snapshot-stage .select-card-wrap {
+      display: none !important;
+    }
+
     @media (max-width: 480px) {
       body {
         padding: 12px;
@@ -398,6 +495,15 @@
       .page-header {
         align-items: flex-start;
         flex-direction: column;
+      }
+
+      .snapshot-controls {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .snapshot-button {
+        width: 100%;
       }
 
       .grid {
@@ -431,11 +537,35 @@
     </div>
   </div>
 
+  <div class="snapshot-controls">
+    <button class="snapshot-button" onclick="toggleSnapshotMode()" id="snapshotModeButton">
+      Select quotes
+    </button>
+
+    <button class="snapshot-button" onclick="selectAllQuotes()">
+      Select all
+    </button>
+
+    <button class="snapshot-button danger" onclick="clearSelectedQuotes()">
+      Clear
+    </button>
+
+    <button class="snapshot-button primary" onclick="generateSnapshot()">
+      Generate WhatsApp snapshot
+    </button>
+  </div>
+
   <div id="app" class="loading">Loading market depth...</div>
 
   <script>
-    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw9Dze__HpwGhmHCmJ6icKzkc2-neEYfp7fod0lvAyBxrlNvWOyFbgs16ql9aNjM4U7/exec';
+    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw9Dze__HpwGhmHCmJ6icKzkc2-neEYfp7fod0lvAyBxrlNvWOyFbgs16ql9aNjM4U7/exec
+';
     const REFRESH_MS = 60000;
+
+    let latestMarketDepthData = [];
+    let latestGeneratedAt = '';
+    let snapshotMode = false;
+    let selectedSnapshotKeys = new Set();
 
     function loadData() {
       document.getElementById('lastRefresh').textContent = 'Refreshing...';
@@ -463,32 +593,41 @@
         return;
       }
 
-      render(payload.data || [], payload.generatedAt || '');
+      latestGeneratedAt = payload.generatedAt || '';
+      render(payload.data || [], latestGeneratedAt);
     }
 
     function render(data, generatedAt) {
       const app = document.getElementById('app');
 
+      latestMarketDepthData = data || [];
+
       document.getElementById('lastRefresh').textContent =
         'Last loaded: ' + new Date().toLocaleTimeString('en-IN') +
         (generatedAt ? ' | Data: ' + generatedAt : '');
 
-      if (!data || !data.length) {
+      if (!latestMarketDepthData.length) {
         app.className = 'empty';
         app.innerHTML = 'No market-depth data found. Run updateMarketDepthDebug() in Apps Script first.';
         return;
       }
 
       app.className = 'grid';
-      app.innerHTML = data.map(renderCard).join('');
+      app.innerHTML = latestMarketDepthData.map(renderCard).join('');
+      applySnapshotModeClass();
     }
 
     function renderCard(item) {
       const isNegative = Number(item.change) < 0;
       const changeClass = isNegative ? 'change negative' : 'change';
       const ltpClass = isNegative ? 'ltp negative' : 'ltp';
+      const nameClass = isNegative ? 'name negative' : 'name positive';
       const arrow = isNegative ? '⌄' : '⌃';
       const movementClass = isNegative ? 'down-card' : 'up-card';
+
+      const cardKey = getCardKey(item);
+      const checkedAttr = selectedSnapshotKeys.has(cardKey) ? 'checked' : '';
+      const selectedClass = selectedSnapshotKeys.has(cardKey) ? 'selected-for-snapshot' : '';
 
       const buyRows = item.buy || [];
       const sellRows = item.sell || [];
@@ -508,14 +647,21 @@
       const prevClosePosition = rangePosition(item.low, item.high, item.prevClose);
 
       return `
-        <div class="card ${movementClass}">
+        <div class="card ${movementClass} ${selectedClass}" data-card-key="${esc(cardKey)}">
+          <div class="select-card-wrap">
+            <label class="card-select-label">
+              <input type="checkbox" ${checkedAttr} onchange="toggleQuoteSelection('${escAttr(cardKey)}', this.checked)">
+              Select for snapshot
+            </label>
+          </div>
+
           <div class="card-top">
             <div>
               <div class="symbol-line">
                 <span class="symbol">${esc(item.tradingSymbol || item.input)}</span>
                 <span class="exchange">${esc(item.exchange)}</span>
               </div>
-              <div class="name">${esc(item.name || '')}</div>
+              <div class="${nameClass}">${esc(item.name || '')}</div>
             </div>
 
             <div class="price-area">
@@ -645,6 +791,168 @@
       `;
     }
 
+    function getCardKey(item) {
+      return [
+        item.exchange || '',
+        item.instrumentKey || '',
+        item.tradingSymbol || item.input || ''
+      ].join('|');
+    }
+
+    function toggleSnapshotMode() {
+      snapshotMode = !snapshotMode;
+      applySnapshotModeClass();
+
+      const button = document.getElementById('snapshotModeButton');
+      button.textContent = snapshotMode ? 'Exit selection' : 'Select quotes';
+    }
+
+    function applySnapshotModeClass() {
+      const app = document.getElementById('app');
+
+      if (!app) return;
+
+      if (snapshotMode) {
+        app.classList.add('snapshot-mode');
+      } else {
+        app.classList.remove('snapshot-mode');
+      }
+    }
+
+    function toggleQuoteSelection(cardKey, checked) {
+      if (checked) {
+        selectedSnapshotKeys.add(cardKey);
+      } else {
+        selectedSnapshotKeys.delete(cardKey);
+      }
+
+      const card = document.querySelector('[data-card-key="' + cssEscape(cardKey) + '"]');
+
+      if (card) {
+        card.classList.toggle('selected-for-snapshot', checked);
+      }
+    }
+
+    function selectAllQuotes() {
+      latestMarketDepthData.forEach(item => {
+        selectedSnapshotKeys.add(getCardKey(item));
+      });
+
+      snapshotMode = true;
+      rerenderCurrentData();
+    }
+
+    function clearSelectedQuotes() {
+      selectedSnapshotKeys.clear();
+      rerenderCurrentData();
+    }
+
+    function rerenderCurrentData() {
+      const app = document.getElementById('app');
+
+      if (!latestMarketDepthData || !latestMarketDepthData.length) return;
+
+      app.className = 'grid';
+      app.innerHTML = latestMarketDepthData.map(renderCard).join('');
+      applySnapshotModeClass();
+
+      const button = document.getElementById('snapshotModeButton');
+
+      if (button) {
+        button.textContent = snapshotMode ? 'Exit selection' : 'Select quotes';
+      }
+    }
+
+    async function generateSnapshot() {
+      if (!latestMarketDepthData || !latestMarketDepthData.length) {
+        showError('No quote data available for snapshot.');
+        return;
+      }
+
+      let selectedItems = latestMarketDepthData.filter(item => {
+        return selectedSnapshotKeys.has(getCardKey(item));
+      });
+
+      if (!selectedItems.length) {
+        selectedItems = latestMarketDepthData;
+      }
+
+      const stage = document.createElement('div');
+      stage.className = 'snapshot-stage';
+
+      const nowText = new Date().toLocaleString('en-IN');
+
+      stage.innerHTML = `
+        <div class="snapshot-title">Market Depth Snapshot</div>
+        <div class="snapshot-meta">
+          InvITs, REITs and SM REITs | Generated: ${esc(nowText)}
+          ${latestGeneratedAt ? ' | Data: ' + esc(latestGeneratedAt) : ''}
+        </div>
+        <div class="snapshot-grid">
+          ${selectedItems.map(renderCard).join('')}
+        </div>
+      `;
+
+      document.body.appendChild(stage);
+
+      try {
+        const canvas = await html2canvas(stage, {
+          backgroundColor: '#0f1115',
+          scale: 2,
+          useCORS: true
+        });
+
+        const blob = await new Promise(resolve => {
+          canvas.toBlob(resolve, 'image/png', 1);
+        });
+
+        const fileName = 'market-depth-snapshot-' + formatFileTimestamp() + '.png';
+        const file = new File([blob], fileName, { type: 'image/png' });
+
+        if (navigator.canShare && navigator.canShare({ files: [file] }) && navigator.share) {
+          await navigator.share({
+            files: [file],
+            title: 'Market Depth Snapshot',
+            text: 'Market Depth Snapshot'
+          });
+        } else {
+          downloadBlob(blob, fileName);
+        }
+      } catch (err) {
+        showError(err && err.message ? err.message : String(err));
+      } finally {
+        stage.remove();
+      }
+    }
+
+    function downloadBlob(blob, fileName) {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+
+      a.href = url;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+
+      setTimeout(function () {
+        URL.revokeObjectURL(url);
+        a.remove();
+      }, 1000);
+    }
+
+    function formatFileTimestamp() {
+      const d = new Date();
+
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      const dd = String(d.getDate()).padStart(2, '0');
+      const hh = String(d.getHours()).padStart(2, '0');
+      const mi = String(d.getMinutes()).padStart(2, '0');
+      const ss = String(d.getSeconds()).padStart(2, '0');
+
+      return yyyy + mm + dd + '-' + hh + mi + ss;
+    }
+
     function rangePosition(low, high, value) {
       low = Number(low || 0);
       high = Number(high || 0);
@@ -695,6 +1003,14 @@
       return Math.round(n).toLocaleString('en-IN');
     }
 
+    function cssEscape(value) {
+      if (window.CSS && CSS.escape) {
+        return CSS.escape(value);
+      }
+
+      return String(value).replace(/"/g, '\\"');
+    }
+
     function esc(value) {
       return String(value || '')
         .replace(/&/g, '&amp;')
@@ -702,6 +1018,15 @@
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#039;');
+    }
+
+    function escAttr(value) {
+      return String(value || '')
+        .replace(/\\/g, '\\\\')
+        .replace(/'/g, "\\'")
+        .replace(/"/g, '&quot;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
     }
 
     function showError(error) {
