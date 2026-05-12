@@ -178,6 +178,7 @@
     }
 
     .symbol {
+      color: var(--text);
       font-size: 15px;
       font-weight: 700;
       letter-spacing: 0.2px;
@@ -185,14 +186,6 @@
       overflow: hidden;
       text-overflow: ellipsis;
       max-width: 220px;
-    }
-
-    .symbol.positive {
-      color: var(--green);
-    }
-
-    .symbol.negative {
-      color: var(--red);
     }
 
     .exchange {
@@ -608,7 +601,7 @@
 
       const changeClass = isDownOrFlat ? 'change negative' : 'change';
       const ltpClass = isDownOrFlat ? 'ltp negative' : 'ltp';
-      const symbolClass = isDownOrFlat ? 'symbol negative' : 'symbol positive';
+      const symbolClass = 'symbol';
       const arrow = isDownOrFlat ? '⌄' : '⌃';
       const movementClass = isDownOrFlat ? 'down-card' : 'up-card';
 
