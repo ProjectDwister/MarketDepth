@@ -457,19 +457,6 @@
       padding: 18px;
     }
 
-    .snapshot-stage .snapshot-title {
-      font-size: 20px;
-      font-weight: 700;
-      margin-bottom: 6px;
-    }
-
-    .snapshot-stage .snapshot-meta {
-      color: var(--muted);
-      font-size: 11px;
-      margin-bottom: 14px;
-      line-height: 1.35;
-    }
-
     .snapshot-stage .snapshot-grid {
       display: grid;
       grid-template-columns: 1fr;
@@ -946,11 +933,6 @@
       stage.className = 'snapshot-stage';
 
       stage.innerHTML = `
-        <div class="snapshot-title">${esc(item.tradingSymbol || item.input || 'Market Depth')}</div>
-        <div class="snapshot-meta">
-          InvITs, REITs and SM REITs | Generated: ${esc(new Date().toLocaleString('en-IN'))}
-          ${latestGeneratedAt ? ' | Data: ' + esc(latestGeneratedAt) : ''}
-        </div>
         <div class="snapshot-grid">
           ${renderCard(item)}
         </div>
