@@ -338,15 +338,6 @@
       padding: 10px 12px 12px;
     }
 
-    .section-title {
-      color: var(--muted);
-      font-size: 10px;
-      font-weight: 700;
-      letter-spacing: 0.8px;
-      text-transform: uppercase;
-      margin-bottom: 8px;
-    }
-
     .depth-header,
     .depth-row,
     .total-row {
@@ -472,7 +463,7 @@
     }
 
     .range-wrap {
-      margin: 12px 0 6px;
+      margin: 12px 0 14px;
       height: 22px;
       position: relative;
     }
@@ -521,35 +512,6 @@
       position: absolute;
       top: 2px;
       transform: translateX(-50%);
-    }
-
-    .range-legend {
-      display: flex;
-      gap: 14px;
-      color: var(--muted);
-      font-size: 10px;
-      margin-bottom: 12px;
-    }
-
-    .legend-dot {
-      display: inline-block;
-      width: 7px;
-      height: 7px;
-      border-radius: 50%;
-      background: var(--text);
-      border: 2px solid var(--green);
-      margin-right: 5px;
-      vertical-align: -1px;
-    }
-
-    .legend-triangle {
-      display: inline-block;
-      width: 0;
-      height: 0;
-      border-left: 5px solid transparent;
-      border-right: 5px solid transparent;
-      border-bottom: 8px solid var(--muted);
-      margin-right: 5px;
     }
 
     .status {
@@ -840,8 +802,6 @@
           </div>
 
           <div class="depth">
-            <div class="section-title">Market Depth</div>
-
             <div class="depth-header">
               <div>Bid</div>
               <div class="orders">Orders</div>
@@ -889,11 +849,6 @@
               <div class="range-fill" style="left:0%; width:${ltpPosition}%"></div>
               <div class="range-dot" style="left:${ltpPosition}%"></div>
               <div class="range-triangle" style="left:${prevClosePosition}%"></div>
-            </div>
-
-            <div class="range-legend">
-              <span><span class="legend-dot"></span>LTP</span>
-              <span><span class="legend-triangle"></span>Prev Close</span>
             </div>
 
             <div class="metric-grid">
