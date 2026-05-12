@@ -334,62 +334,6 @@
       color: var(--red);
     }
 
-    .top-bid-offer {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
-      padding: 0 16px 10px;
-    }
-
-    .bid-offer-box {
-      background: var(--card2);
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      padding: 7px 9px;
-      display: flex;
-      justify-content: space-between;
-      gap: 8px;
-      font-size: 12px;
-      font-variant-numeric: tabular-nums;
-    }
-
-    .bid-offer-label {
-      color: var(--muted);
-      font-size: 11px;
-    }
-
-    .bid-offer-value.bid-value {
-      color: var(--blue);
-      font-weight: 700;
-    }
-
-    .bid-offer-value.offer-value {
-      color: var(--red);
-      font-weight: 700;
-    }
-
-    .quick-chips {
-      display: flex;
-      gap: 6px;
-      flex-wrap: wrap;
-      padding: 0 16px 10px;
-    }
-
-    .chip {
-      background: var(--chip);
-      border: 1px solid var(--line);
-      border-radius: 999px;
-      color: var(--muted);
-      font-size: 11px;
-      padding: 5px 8px;
-      font-variant-numeric: tabular-nums;
-    }
-
-    .chip strong {
-      color: var(--text);
-      font-weight: 700;
-    }
-
     .depth {
       padding: 10px 12px 12px;
     }
@@ -704,14 +648,6 @@
         font-size: 18px;
       }
 
-      .top-bid-offer {
-        padding: 0 12px 8px;
-      }
-
-      .quick-chips {
-        padding: 0 12px 8px;
-      }
-
       .depth {
         padding: 8px 10px 10px;
       }
@@ -840,6 +776,7 @@
       app.innerHTML = latestMarketDepthData.map(renderCard).join('');
       applySnapshotModeClass();
       updateSelectionCount();
+      updateSnapshotButtonLabel();
     }
 
     function renderCard(item) {
@@ -858,8 +795,6 @@
 
       const buyRows = item.buy || [];
       const sellRows = item.sell || [];
-      const bestBid = buyRows[0] && buyRows[0].price ? buyRows[0].price : 0;
-      const bestOffer = sellRows[0] && sellRows[0].price ? sellRows[0].price : 0;
 
       const maxQty = Math.max(
         1,
@@ -902,23 +837,6 @@
                 </div>
               </div>
             </div>
-          </div>
-
-          <div class="top-bid-offer">
-            <div class="bid-offer-box">
-              <span class="bid-offer-label">Best Bid</span>
-              <span class="bid-offer-value bid-value">${fmt(bestBid)}</span>
-            </div>
-            <div class="bid-offer-box">
-              <span class="bid-offer-label">Best Offer</span>
-              <span class="bid-offer-value offer-value">${fmt(bestOffer)}</span>
-            </div>
-          </div>
-
-          <div class="quick-chips">
-            <span class="chip">Vol <strong>${fmtInt(item.volume)}</strong></span>
-            <span class="chip">Buy <strong>${fmtInt(item.totalBuyQty)}</strong></span>
-            <span class="chip">Sell <strong>${fmtInt(item.totalSellQty)}</strong></span>
           </div>
 
           <div class="depth">
