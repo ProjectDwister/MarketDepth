@@ -177,25 +177,25 @@
       min-width: 0;
     }
 
-   .symbol {
-  font-size: 15px;
-  font-weight: 700;
-  letter-spacing: 0.2px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 220px;
-}
+    .symbol {
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 0.2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 220px;
+    }
 
-.symbol.positive,
-.name.positive {
-  color: var(--green);
-}
+    .symbol.positive,
+    .name.positive {
+      color: var(--green);
+    }
 
-.symbol.negative,
-.name.negative {
-  color: var(--red);
-}
+    .symbol.negative,
+    .name.negative {
+      color: var(--red);
+    }
 
     .exchange {
       color: var(--muted);
@@ -212,14 +212,6 @@
       text-overflow: ellipsis;
       white-space: nowrap;
       color: var(--muted);
-    }
-
-    .name.positive {
-      color: var(--green);
-    }
-
-    .name.negative {
-      color: var(--red);
     }
 
     .price-area {
@@ -623,12 +615,16 @@
     }
 
     function renderCard(item) {
-      const isNegative = Number(item.change) < 0;
-      const changeClass = isNegative ? 'change negative' : 'change';
-      const ltpClass = isNegative ? 'ltp negative' : 'ltp';
-      const nameClass = isNegative ? 'name negative' : 'name positive';
-      const arrow = isNegative ? '⌄' : '⌃';
-      const movementClass = isNegative ? 'down-card' : 'up-card';
+      const changeValue = Number(item.change || 0);
+      const isUp = changeValue > 0;
+      const isDownOrFlat = changeValue <= 0;
+
+      const changeClass = isDownOrFlat ? 'change negative' : 'change';
+      const ltpClass = isDownOrFlat ? 'ltp negative' : 'ltp';
+      const nameClass = isDownOrFlat ? 'name negative' : 'name positive';
+      const symbolClass = isDownOrFlat ? 'symbol negative' : 'symbol positive';
+      const arrow = isDownOrFlat ? '⌄' : '⌃';
+      const movementClass = isDownOrFlat ? 'down-card' : 'up-card';
 
       const cardKey = getCardKey(item);
       const checkedAttr = selectedSnapshotKeys.has(cardKey) ? 'checked' : '';
@@ -663,7 +659,7 @@
           <div class="card-top">
             <div>
               <div class="symbol-line">
-                <span class="symbol">${esc(item.tradingSymbol || item.input)}</span>
+                <span class="${symbolClass}">${esc(item.tradingSymbol || item.input)}</span>
                 <span class="exchange">${esc(item.exchange)}</span>
               </div>
               <div class="${nameClass}">${esc(item.name || '')}</div>
