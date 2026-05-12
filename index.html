@@ -187,13 +187,11 @@
       max-width: 220px;
     }
 
-    .symbol.positive,
-    .name.positive {
+    .symbol.positive {
       color: var(--green);
     }
 
-    .symbol.negative,
-    .name.negative {
+    .symbol.negative {
       color: var(--red);
     }
 
@@ -202,16 +200,6 @@
       font-size: 9px;
       font-weight: 700;
       letter-spacing: 0.6px;
-    }
-
-    .name {
-      margin-top: 4px;
-      font-size: 11px;
-      max-width: 260px;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      color: var(--muted);
     }
 
     .price-area {
@@ -616,12 +604,10 @@
 
     function renderCard(item) {
       const changeValue = Number(item.change || 0);
-      const isUp = changeValue > 0;
       const isDownOrFlat = changeValue <= 0;
 
       const changeClass = isDownOrFlat ? 'change negative' : 'change';
       const ltpClass = isDownOrFlat ? 'ltp negative' : 'ltp';
-      const nameClass = isDownOrFlat ? 'name negative' : 'name positive';
       const symbolClass = isDownOrFlat ? 'symbol negative' : 'symbol positive';
       const arrow = isDownOrFlat ? '⌄' : '⌃';
       const movementClass = isDownOrFlat ? 'down-card' : 'up-card';
@@ -662,7 +648,6 @@
                 <span class="${symbolClass}">${esc(item.tradingSymbol || item.input)}</span>
                 <span class="exchange">${esc(item.exchange)}</span>
               </div>
-              <div class="${nameClass}">${esc(item.name || '')}</div>
             </div>
 
             <div class="price-area">
