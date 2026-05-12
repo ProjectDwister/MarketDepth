@@ -420,15 +420,6 @@
       transform: translateX(-50%);
     }
 
-    .range-labels {
-      display: flex;
-      justify-content: space-between;
-      color: var(--muted);
-      font-size: 10px;
-      margin-top: -6px;
-      margin-bottom: 10px;
-    }
-
     .status {
       color: #f7c948;
       font-size: 11px;
@@ -454,28 +445,29 @@
       position: fixed;
       left: -99999px;
       top: 0;
-      width: 1080px;
+      width: 520px;
       background: #0f1115;
       color: var(--text);
-      padding: 28px;
+      padding: 18px;
     }
 
     .snapshot-stage .snapshot-title {
-      font-size: 28px;
+      font-size: 20px;
       font-weight: 700;
       margin-bottom: 6px;
     }
 
     .snapshot-stage .snapshot-meta {
       color: var(--muted);
-      font-size: 14px;
-      margin-bottom: 22px;
+      font-size: 11px;
+      margin-bottom: 14px;
+      line-height: 1.35;
     }
 
     .snapshot-stage .snapshot-grid {
       display: grid;
       grid-template-columns: 1fr;
-      gap: 18px;
+      gap: 12px;
     }
 
     .snapshot-stage .card {
@@ -550,8 +542,8 @@
       Clear
     </button>
 
-    <button class="snapshot-button primary" onclick="generateSnapshot()">
-      Generate WhatsApp snapshot
+    <button class="snapshot-button primary" onclick="generateIndividualSnapshots()">
+      Generate WhatsApp snapshots
     </button>
   </div>
 
@@ -701,8 +693,6 @@
           </div>
 
           <div class="metrics">
-            <div class="section-title">Day Range</div>
-
             <div class="metric-grid">
               <div class="metric">
                 <span class="metric-label">Open</span>
@@ -728,11 +718,6 @@
               <div class="range-fill" style="left:0%; width:${ltpPosition}%"></div>
               <div class="range-dot" style="left:${ltpPosition}%"></div>
               <div class="range-triangle" style="left:${prevClosePosition}%"></div>
-            </div>
-
-            <div class="range-labels">
-              <span>Low ${fmt(item.low)}</span>
-              <span>High ${fmt(item.high)}</span>
             </div>
 
             <div class="metric-grid">
@@ -864,7 +849,7 @@
       }
     }
 
-    async function generateSnapshot() {
+    async function generateIndividualSnapshots() {
       if (!latestMarketDepthData || !latestMarketDepthData.length) {
         showError('No quote data available for snapshot.');
         return;
@@ -878,19 +863,42 @@
         selectedItems = latestMarketDepthData;
       }
 
+      for (let i = 0; i < selectedItems.length; i++) {
+        const item = selectedItems[i];
+        const fileName =
+          'market-depth-' +
+          safeFileName(item.tradingSymbol || item.input || 'security') +
+          '-' +
+          formatFileTimestamp() +
+          '.png';
+
+        const blob = await createSingleSecuritySnapshotBlob(item);
+        const file = new File([blob], fileName, { type: 'image/png' });
+
+        if (navigator.canShare && navigator.canShare({ files: [file] }) && navigator.share) {
+          await navigator.share({
+            files: [file],
+            title: 'Market Depth - ' + (item.tradingSymbol || item.input || 'Security'),
+            text: 'Market Depth - ' + (item.tradingSymbol || item.input || 'Security')
+          });
+        } else {
+          downloadBlob(blob, fileName);
+        }
+      }
+    }
+
+    async function createSingleSecuritySnapshotBlob(item) {
       const stage = document.createElement('div');
       stage.className = 'snapshot-stage';
 
-      const nowText = new Date().toLocaleString('en-IN');
-
       stage.innerHTML = `
-        <div class="snapshot-title">Market Depth Snapshot</div>
+        <div class="snapshot-title">${esc(item.tradingSymbol || item.input || 'Market Depth')}</div>
         <div class="snapshot-meta">
-          InvITs, REITs and SM REITs | Generated: ${esc(nowText)}
+          InvITs, REITs and SM REITs | Generated: ${esc(new Date().toLocaleString('en-IN'))}
           ${latestGeneratedAt ? ' | Data: ' + esc(latestGeneratedAt) : ''}
         </div>
         <div class="snapshot-grid">
-          ${selectedItems.map(renderCard).join('')}
+          ${renderCard(item)}
         </div>
       `;
 
@@ -903,24 +911,9 @@
           useCORS: true
         });
 
-        const blob = await new Promise(resolve => {
+        return await new Promise(resolve => {
           canvas.toBlob(resolve, 'image/png', 1);
         });
-
-        const fileName = 'market-depth-snapshot-' + formatFileTimestamp() + '.png';
-        const file = new File([blob], fileName, { type: 'image/png' });
-
-        if (navigator.canShare && navigator.canShare({ files: [file] }) && navigator.share) {
-          await navigator.share({
-            files: [file],
-            title: 'Market Depth Snapshot',
-            text: 'Market Depth Snapshot'
-          });
-        } else {
-          downloadBlob(blob, fileName);
-        }
-      } catch (err) {
-        showError(err && err.message ? err.message : String(err));
       } finally {
         stage.remove();
       }
@@ -939,6 +932,12 @@
         URL.revokeObjectURL(url);
         a.remove();
       }, 1000);
+    }
+
+    function safeFileName(value) {
+      return String(value || 'security')
+        .replace(/[^a-z0-9_-]/gi, '_')
+        .toLowerCase();
     }
 
     function formatFileTimestamp() {
