@@ -177,16 +177,25 @@
       min-width: 0;
     }
 
-    .symbol {
-      color: var(--green);
-      font-size: 15px;
-      font-weight: 700;
-      letter-spacing: 0.2px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      max-width: 220px;
-    }
+   .symbol {
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 220px;
+}
+
+.symbol.positive,
+.name.positive {
+  color: var(--green);
+}
+
+.symbol.negative,
+.name.negative {
+  color: var(--red);
+}
 
     .exchange {
       color: var(--muted);
