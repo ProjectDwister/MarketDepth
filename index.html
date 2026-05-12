@@ -19,8 +19,22 @@
       --green: #4cd964;
       --red: #ff5b57;
       --blue: #2f80ff;
+      --yellow: #f7c948;
       --bidShade: rgba(47, 128, 255, 0.16);
       --askShade: rgba(255, 91, 87, 0.14);
+      --chip: #1d222b;
+    }
+
+    body.light-theme {
+      --bg: #f5f7fb;
+      --card: #ffffff;
+      --card2: #f0f3f8;
+      --line: #d9dee8;
+      --text: #1c2430;
+      --muted: #697386;
+      --chip: #eef2f7;
+      --bidShade: rgba(47, 128, 255, 0.12);
+      --askShade: rgba(255, 91, 87, 0.10);
     }
 
     * {
@@ -41,12 +55,12 @@
       justify-content: space-between;
       align-items: center;
       gap: 12px;
-      margin-bottom: 18px;
+      margin-bottom: 16px;
     }
 
     .page-title {
       font-size: 20px;
-      font-weight: 600;
+      font-weight: 700;
       letter-spacing: 0.2px;
     }
 
@@ -56,18 +70,55 @@
       margin-top: 4px;
     }
 
+    .top-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      align-items: flex-end;
+    }
+
     .refresh-row {
       display: flex;
       align-items: center;
       gap: 10px;
       color: var(--muted);
       font-size: 12px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .market-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 9px;
+      border-radius: 999px;
+      background: var(--chip);
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .market-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--yellow);
+    }
+
+    .market-status.live .market-dot {
+      background: var(--green);
+    }
+
+    .market-status.closed .market-dot {
+      background: var(--yellow);
     }
 
     .refresh-button,
-    .snapshot-button {
+    .snapshot-button,
+    .theme-button {
       background: #20242d;
-      color: var(--text);
+      color: #d8dee9;
       border: 1px solid #303642;
       border-radius: 8px;
       padding: 8px 12px;
@@ -75,9 +126,24 @@
       font-size: 12px;
     }
 
+    body.light-theme .refresh-button,
+    body.light-theme .snapshot-button,
+    body.light-theme .theme-button {
+      background: #ffffff;
+      color: #1c2430;
+      border-color: #d9dee8;
+    }
+
     .refresh-button:hover,
-    .snapshot-button:hover {
+    .snapshot-button:hover,
+    .theme-button:hover {
       background: #2a303b;
+    }
+
+    body.light-theme .refresh-button:hover,
+    body.light-theme .snapshot-button:hover,
+    body.light-theme .theme-button:hover {
+      background: #eef2f7;
     }
 
     .snapshot-controls {
@@ -85,7 +151,7 @@
       gap: 8px;
       flex-wrap: wrap;
       align-items: center;
-      margin-bottom: 16px;
+      margin-bottom: 8px;
     }
 
     .snapshot-button.primary {
@@ -106,6 +172,21 @@
       padding-left: 4px;
     }
 
+    .selection-hint {
+      display: none;
+      color: var(--muted);
+      font-size: 12px;
+      margin-bottom: 16px;
+      padding: 8px 10px;
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+    }
+
+    .selection-hint.visible {
+      display: block;
+    }
+
     .grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
@@ -121,18 +202,30 @@
       transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
     }
 
+    body.light-theme .card {
+      border-color: #d9dee8;
+      box-shadow: 0 8px 22px rgba(30, 42, 60, 0.08);
+    }
+
     .card:hover {
       transform: translateY(-2px);
       border-color: #343b49;
       box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
     }
 
+    body.light-theme .card:hover {
+      border-color: #c7d0df;
+      box-shadow: 0 12px 28px rgba(30, 42, 60, 0.14);
+    }
+
     .card.up-card {
       border-left: 3px solid rgba(76, 217, 100, 0.75);
+      background: linear-gradient(180deg, rgba(76,217,100,0.04), var(--card) 35%);
     }
 
     .card.down-card {
       border-left: 3px solid rgba(255, 91, 87, 0.75);
+      background: linear-gradient(180deg, rgba(255,91,87,0.04), var(--card) 35%);
     }
 
     .select-card-wrap {
@@ -188,11 +281,15 @@
       max-width: 220px;
     }
 
-    .exchange {
-      color: var(--muted);
+    .exchange-pill {
+      color: var(--text);
+      background: var(--chip);
+      border: 1px solid var(--line);
       font-size: 9px;
-      font-weight: 700;
-      letter-spacing: 0.6px;
+      font-weight: 800;
+      letter-spacing: 0.7px;
+      border-radius: 999px;
+      padding: 3px 7px;
     }
 
     .price-area {
@@ -203,16 +300,17 @@
     .price-meta {
       display: flex;
       flex-direction: column;
-      gap: 3px;
+      gap: 4px;
       align-items: flex-end;
       justify-content: flex-start;
     }
 
     .ltp {
       color: var(--green);
-      font-size: 18px;
-      font-weight: 700;
-      line-height: 1.1;
+      font-size: 20px;
+      font-weight: 800;
+      line-height: 1.05;
+      font-variant-numeric: tabular-nums;
     }
 
     .ltp.negative {
@@ -225,6 +323,7 @@
       align-items: center;
       justify-content: flex-end;
       font-size: 12px;
+      font-variant-numeric: tabular-nums;
     }
 
     .change {
@@ -233,6 +332,62 @@
 
     .change.negative {
       color: var(--red);
+    }
+
+    .top-bid-offer {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      padding: 0 16px 10px;
+    }
+
+    .bid-offer-box {
+      background: var(--card2);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 7px 9px;
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      font-size: 12px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .bid-offer-label {
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .bid-offer-value.bid-value {
+      color: var(--blue);
+      font-weight: 700;
+    }
+
+    .bid-offer-value.offer-value {
+      color: var(--red);
+      font-weight: 700;
+    }
+
+    .quick-chips {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      padding: 0 16px 10px;
+    }
+
+    .chip {
+      background: var(--chip);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      color: var(--muted);
+      font-size: 11px;
+      padding: 5px 8px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .chip strong {
+      color: var(--text);
+      font-weight: 700;
     }
 
     .depth {
@@ -265,11 +420,19 @@
       border-bottom: 1px solid rgba(255, 255, 255, 0.035);
     }
 
+    body.light-theme .depth-header {
+      border-bottom-color: rgba(28, 36, 48, 0.08);
+    }
+
     .depth-row {
       height: 28px;
       position: relative;
       font-variant-numeric: tabular-nums;
       border-bottom: 1px solid rgba(255, 255, 255, 0.025);
+    }
+
+    body.light-theme .depth-row {
+      border-bottom-color: rgba(28, 36, 48, 0.05);
     }
 
     .depth-row:last-child {
@@ -359,57 +522,94 @@
     }
 
     .metric-value {
-      color: #dce7f7;
+      color: var(--text);
       text-align: right;
+      font-weight: 600;
     }
 
     .range-wrap {
-      margin: 12px 0 14px;
-      height: 18px;
+      margin: 12px 0 6px;
+      height: 22px;
       position: relative;
     }
 
     .range-line {
-      height: 2px;
+      height: 3px;
       background: #2b3039;
       position: absolute;
       left: 0;
       right: 0;
-      top: 8px;
+      top: 10px;
+      border-radius: 999px;
+    }
+
+    body.light-theme .range-line {
+      background: #d8dee9;
     }
 
     .range-fill {
-      height: 2px;
-      background: #4caf50;
+      height: 3px;
+      background: var(--green);
       position: absolute;
-      top: 8px;
+      top: 10px;
       left: 0;
       width: 50%;
+      border-radius: 999px;
     }
 
     .range-dot {
-      width: 6px;
-      height: 6px;
-      background: #7f8794;
+      width: 8px;
+      height: 8px;
+      background: var(--text);
+      border: 2px solid var(--green);
       border-radius: 50%;
       position: absolute;
-      top: 6px;
+      top: 7px;
       transform: translateX(-50%);
     }
 
     .range-triangle {
       width: 0;
       height: 0;
-      border-left: 4px solid transparent;
-      border-right: 4px solid transparent;
-      border-bottom: 7px solid #7f8794;
+      border-left: 5px solid transparent;
+      border-right: 5px solid transparent;
+      border-bottom: 8px solid var(--muted);
       position: absolute;
-      top: 3px;
+      top: 2px;
       transform: translateX(-50%);
     }
 
+    .range-legend {
+      display: flex;
+      gap: 14px;
+      color: var(--muted);
+      font-size: 10px;
+      margin-bottom: 12px;
+    }
+
+    .legend-dot {
+      display: inline-block;
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--text);
+      border: 2px solid var(--green);
+      margin-right: 5px;
+      vertical-align: -1px;
+    }
+
+    .legend-triangle {
+      display: inline-block;
+      width: 0;
+      height: 0;
+      border-left: 5px solid transparent;
+      border-right: 5px solid transparent;
+      border-bottom: 8px solid var(--muted);
+      margin-right: 5px;
+    }
+
     .status {
-      color: #f7c948;
+      color: var(--yellow);
       font-size: 11px;
       margin-top: 10px;
       line-height: 1.35;
@@ -421,7 +621,7 @@
       color: var(--muted);
       padding: 24px;
       background: var(--card);
-      border: 1px solid #20242d;
+      border: 1px solid var(--line);
       border-radius: 12px;
     }
 
@@ -433,10 +633,10 @@
       position: fixed;
       left: -99999px;
       top: 0;
-      width: 520px;
+      width: 430px;
       background: #0f1115;
-      color: var(--text);
-      padding: 18px;
+      color: #d8dee9;
+      padding: 14px;
     }
 
     .snapshot-stage .snapshot-grid {
@@ -457,6 +657,7 @@
     @media (max-width: 480px) {
       body {
         padding: 12px;
+        font-size: 12px;
       }
 
       .page-header {
@@ -464,12 +665,22 @@
         flex-direction: column;
       }
 
+      .top-actions {
+        align-items: flex-start;
+        width: 100%;
+      }
+
+      .refresh-row {
+        justify-content: flex-start;
+      }
+
       .snapshot-controls {
         flex-direction: column;
         align-items: stretch;
       }
 
-      .snapshot-button {
+      .snapshot-button,
+      .theme-button {
         width: 100%;
       }
 
@@ -483,6 +694,30 @@
 
       .card {
         border-radius: 10px;
+      }
+
+      .card-top {
+        padding: 12px 12px 8px;
+      }
+
+      .ltp {
+        font-size: 18px;
+      }
+
+      .top-bid-offer {
+        padding: 0 12px 8px;
+      }
+
+      .quick-chips {
+        padding: 0 12px 8px;
+      }
+
+      .depth {
+        padding: 8px 10px 10px;
+      }
+
+      .depth-row {
+        height: 24px;
       }
 
       .depth-header,
@@ -502,9 +737,16 @@
       <div class="page-subtitle">NSE / BSE live depth</div>
     </div>
 
-    <div class="refresh-row">
-      <span id="lastRefresh">Loading...</span>
-      <button class="refresh-button" onclick="loadData()">Refresh</button>
+    <div class="top-actions">
+      <div class="refresh-row">
+        <span id="marketStatus" class="market-status">
+          <span class="market-dot"></span>
+          <span>Checking market</span>
+        </span>
+        <span id="lastRefresh">Loading...</span>
+        <button class="refresh-button" onclick="loadData()">Refresh</button>
+        <button class="theme-button" onclick="toggleTheme()" id="themeButton">Light theme</button>
+      </div>
     </div>
   </div>
 
@@ -521,11 +763,15 @@
       Clear
     </button>
 
-    <button class="snapshot-button primary" onclick="generateIndividualSnapshots()">
+    <button class="snapshot-button primary" onclick="generateIndividualSnapshots()" id="snapshotGenerateButton">
       Generate WhatsApp snapshots
     </button>
 
     <span class="selection-count" id="selectionCount">No quotes selected</span>
+  </div>
+
+  <div class="selection-hint" id="selectionHint">
+    Select one or more securities to generate separate WhatsApp images. If nothing is selected, all securities will be included.
   </div>
 
   <div id="app" class="loading">Loading market depth...</div>
@@ -540,6 +786,7 @@
     let selectedSnapshotKeys = new Set();
 
     function loadData() {
+      updateMarketStatus();
       document.getElementById('lastRefresh').textContent = 'Refreshing...';
 
       const oldScript = document.getElementById('marketDepthJsonp');
@@ -611,6 +858,9 @@
 
       const buyRows = item.buy || [];
       const sellRows = item.sell || [];
+      const bestBid = buyRows[0] && buyRows[0].price ? buyRows[0].price : 0;
+      const bestOffer = sellRows[0] && sellRows[0].price ? sellRows[0].price : 0;
+
       const maxQty = Math.max(
         1,
         ...buyRows.map(x => Number(x.qty || 0)),
@@ -639,7 +889,7 @@
             <div>
               <div class="symbol-line">
                 <span class="${symbolClass}">${esc(item.tradingSymbol || item.input)}</span>
-                <span class="exchange">${esc(item.exchange)}</span>
+                <span class="exchange-pill">${esc(item.exchange)}</span>
               </div>
             </div>
 
@@ -652,6 +902,23 @@
                 </div>
               </div>
             </div>
+          </div>
+
+          <div class="top-bid-offer">
+            <div class="bid-offer-box">
+              <span class="bid-offer-label">Best Bid</span>
+              <span class="bid-offer-value bid-value">${fmt(bestBid)}</span>
+            </div>
+            <div class="bid-offer-box">
+              <span class="bid-offer-label">Best Offer</span>
+              <span class="bid-offer-value offer-value">${fmt(bestOffer)}</span>
+            </div>
+          </div>
+
+          <div class="quick-chips">
+            <span class="chip">Vol <strong>${fmtInt(item.volume)}</strong></span>
+            <span class="chip">Buy <strong>${fmtInt(item.totalBuyQty)}</strong></span>
+            <span class="chip">Sell <strong>${fmtInt(item.totalSellQty)}</strong></span>
           </div>
 
           <div class="depth">
@@ -706,25 +973,16 @@
               <div class="range-triangle" style="left:${prevClosePosition}%"></div>
             </div>
 
+            <div class="range-legend">
+              <span><span class="legend-dot"></span>LTP</span>
+              <span><span class="legend-triangle"></span>Prev Close</span>
+            </div>
+
             <div class="metric-grid">
-              <div class="metric">
-                <span class="metric-label">Volume</span>
-                <span class="metric-value">${fmtInt(item.volume)}</span>
-              </div>
               <div class="metric">
                 <span class="metric-label">Avg. price</span>
                 <span class="metric-value">${fmt(item.avgPrice)}</span>
               </div>
-
-              <div class="metric">
-                <span class="metric-label">Total Buy</span>
-                <span class="metric-value">${fmtInt(item.totalBuyQty)}</span>
-              </div>
-              <div class="metric">
-                <span class="metric-label">Total Sell</span>
-                <span class="metric-value">${fmtInt(item.totalSellQty)}</span>
-              </div>
-
               <div class="metric">
                 <span class="metric-label">Updated</span>
                 <span class="metric-value">${esc(item.updatedAt || '')}</span>
@@ -776,7 +1034,15 @@
       applySnapshotModeClass();
 
       const button = document.getElementById('snapshotModeButton');
+      const hint = document.getElementById('selectionHint');
+
       button.textContent = snapshotMode ? 'Exit selection' : 'Select quotes';
+
+      if (hint) {
+        hint.classList.toggle('visible', snapshotMode);
+      }
+
+      updateSnapshotButtonLabel();
     }
 
     function applySnapshotModeClass() {
@@ -805,6 +1071,7 @@
       }
 
       updateSelectionCount();
+      updateSnapshotButtonLabel();
     }
 
     function selectAllQuotes() {
@@ -814,6 +1081,9 @@
 
       snapshotMode = true;
       rerenderCurrentData();
+
+      const hint = document.getElementById('selectionHint');
+      if (hint) hint.classList.add('visible');
     }
 
     function clearSelectedQuotes() {
@@ -845,11 +1115,26 @@
       }
     }
 
+    function updateSnapshotButtonLabel() {
+      const button = document.getElementById('snapshotGenerateButton');
+      if (!button) return;
+
+      const selected = selectedSnapshotKeys.size;
+      const total = latestMarketDepthData.length || 0;
+      const count = selected || total;
+
+      button.textContent =
+        count && count !== 1
+          ? 'Generate ' + count + ' WhatsApp snapshots'
+          : 'Generate WhatsApp snapshot';
+    }
+
     function rerenderCurrentData() {
       const app = document.getElementById('app');
 
       if (!latestMarketDepthData || !latestMarketDepthData.length) {
         updateSelectionCount();
+        updateSnapshotButtonLabel();
         return;
       }
 
@@ -864,6 +1149,7 @@
       }
 
       updateSelectionCount();
+      updateSnapshotButtonLabel();
     }
 
     async function generateIndividualSnapshots() {
@@ -984,6 +1270,34 @@
       return Math.max(0, Math.min(100, pct));
     }
 
+    function updateMarketStatus() {
+      const status = document.getElementById('marketStatus');
+      if (!status) return;
+
+      const now = new Date();
+      const ist = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }));
+      const day = ist.getDay();
+      const minutes = ist.getHours() * 60 + ist.getMinutes();
+
+      const start = 9 * 60;
+      const end = 15 * 60 + 30;
+      const isWeekday = day >= 1 && day <= 5;
+      const isLive = isWeekday && minutes >= start && minutes <= end;
+
+      status.classList.toggle('live', isLive);
+      status.classList.toggle('closed', !isLive);
+      status.querySelector('span:last-child').textContent = isLive ? 'Live Market' : 'Market Closed';
+    }
+
+    function toggleTheme() {
+      document.body.classList.toggle('light-theme');
+
+      const button = document.getElementById('themeButton');
+      const isLight = document.body.classList.contains('light-theme');
+
+      button.textContent = isLight ? 'Dark theme' : 'Light theme';
+    }
+
     function fmt(value) {
       const n = Number(value || 0);
       if (!n) return '';
@@ -1057,8 +1371,11 @@
       document.getElementById('lastRefresh').textContent = 'Load failed';
     }
 
+    updateMarketStatus();
     loadData();
+
     setInterval(loadData, REFRESH_MS);
+    setInterval(updateMarketStatus, 60000);
   </script>
 </body>
 </html>
