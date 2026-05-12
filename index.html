@@ -100,6 +100,12 @@
       color: #ff8a86;
     }
 
+    .selection-count {
+      color: var(--muted);
+      font-size: 12px;
+      padding-left: 4px;
+    }
+
     .grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
@@ -498,6 +504,10 @@
         width: 100%;
       }
 
+      .selection-count {
+        padding-left: 0;
+      }
+
       .grid {
         grid-template-columns: 1fr;
       }
@@ -545,6 +555,8 @@
     <button class="snapshot-button primary" onclick="generateIndividualSnapshots()">
       Generate WhatsApp snapshots
     </button>
+
+    <span class="selection-count" id="selectionCount">No quotes selected</span>
   </div>
 
   <div id="app" class="loading">Loading market depth...</div>
@@ -602,12 +614,16 @@
       if (!latestMarketDepthData.length) {
         app.className = 'empty';
         app.innerHTML = 'No market-depth data found. Run updateMarketDepthDebug() in Apps Script first.';
+        updateSelectionCount();
         return;
       }
+
+      pruneSelectionsToCurrentData();
 
       app.className = 'grid';
       app.innerHTML = latestMarketDepthData.map(renderCard).join('');
       applySnapshotModeClass();
+      updateSelectionCount();
     }
 
     function renderCard(item) {
@@ -817,6 +833,8 @@
       if (card) {
         card.classList.toggle('selected-for-snapshot', checked);
       }
+
+      updateSelectionCount();
     }
 
     function selectAllQuotes() {
@@ -833,10 +851,37 @@
       rerenderCurrentData();
     }
 
+    function pruneSelectionsToCurrentData() {
+      const validKeys = new Set(latestMarketDepthData.map(item => getCardKey(item)));
+
+      selectedSnapshotKeys.forEach(key => {
+        if (!validKeys.has(key)) {
+          selectedSnapshotKeys.delete(key);
+        }
+      });
+    }
+
+    function updateSelectionCount() {
+      const el = document.getElementById('selectionCount');
+      if (!el) return;
+
+      const selected = selectedSnapshotKeys.size;
+      const total = latestMarketDepthData.length || 0;
+
+      if (!selected) {
+        el.textContent = total ? 'No quotes selected. Snapshot will include all.' : 'No quotes selected';
+      } else {
+        el.textContent = selected + ' of ' + total + ' selected';
+      }
+    }
+
     function rerenderCurrentData() {
       const app = document.getElementById('app');
 
-      if (!latestMarketDepthData || !latestMarketDepthData.length) return;
+      if (!latestMarketDepthData || !latestMarketDepthData.length) {
+        updateSelectionCount();
+        return;
+      }
 
       app.className = 'grid';
       app.innerHTML = latestMarketDepthData.map(renderCard).join('');
@@ -847,6 +892,8 @@
       if (button) {
         button.textContent = snapshotMode ? 'Exit selection' : 'Select quotes';
       }
+
+      updateSelectionCount();
     }
 
     async function generateIndividualSnapshots() {
@@ -863,8 +910,11 @@
         selectedItems = latestMarketDepthData;
       }
 
+      const files = [];
+
       for (let i = 0; i < selectedItems.length; i++) {
         const item = selectedItems[i];
+
         const fileName =
           'market-depth-' +
           safeFileName(item.tradingSymbol || item.input || 'security') +
@@ -875,15 +925,19 @@
         const blob = await createSingleSecuritySnapshotBlob(item);
         const file = new File([blob], fileName, { type: 'image/png' });
 
-        if (navigator.canShare && navigator.canShare({ files: [file] }) && navigator.share) {
-          await navigator.share({
-            files: [file],
-            title: 'Market Depth - ' + (item.tradingSymbol || item.input || 'Security'),
-            text: 'Market Depth - ' + (item.tradingSymbol || item.input || 'Security')
-          });
-        } else {
-          downloadBlob(blob, fileName);
-        }
+        files.push(file);
+      }
+
+      if (navigator.canShare && navigator.canShare({ files: files }) && navigator.share) {
+        await navigator.share({
+          files: files,
+          title: 'Market Depth Snapshots',
+          text: 'Market Depth Snapshots'
+        });
+      } else {
+        files.forEach(file => {
+          downloadBlob(file, file.name);
+        });
       }
     }
 
