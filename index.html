@@ -281,6 +281,14 @@
       max-width: 220px;
     }
 
+    .updated-under-symbol {
+      margin-top: 5px;
+      color: var(--muted);
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 0.2px;
+    }
+
     .exchange-pill {
       color: var(--text);
       background: var(--chip);
@@ -788,6 +796,7 @@
                 <span class="${symbolClass}">${esc(item.tradingSymbol || item.input)}</span>
                 <span class="exchange-pill">${esc(item.exchange)}</span>
               </div>
+              <div class="updated-under-symbol">${formatShortDate(item.updatedAt)}</div>
             </div>
 
             <div class="price-area">
@@ -857,8 +866,8 @@
                 <span class="metric-value">${fmt(item.avgPrice)}</span>
               </div>
               <div class="metric">
-                <span class="metric-label">Updated</span>
-                <span class="metric-value">${esc(item.updatedAt || '')}</span>
+                <span class="metric-label">Volume</span>
+                <span class="metric-value">${fmtInt(item.volume)}</span>
               </div>
             </div>
 
@@ -1129,6 +1138,34 @@
       const ss = String(d.getSeconds()).padStart(2, '0');
 
       return yyyy + mm + dd + '-' + hh + mi + ss;
+    }
+
+    function formatShortDate(value) {
+      if (!value) return '';
+
+      const text = String(value).trim();
+
+      const match = text.match(/^(\d{4})-(\d{2})-(\d{2})/);
+
+      if (match) {
+        const yy = match[1].slice(-2);
+        const mm = match[2];
+        const dd = match[3];
+
+        return dd + '-' + mm + '-' + yy;
+      }
+
+      const d = new Date(text);
+
+      if (isNaN(d.getTime())) {
+        return text;
+      }
+
+      const dd = String(d.getDate()).padStart(2, '0');
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      const yy = String(d.getFullYear()).slice(-2);
+
+      return dd + '-' + mm + '-' + yy;
     }
 
     function rangePosition(low, high, value) {
