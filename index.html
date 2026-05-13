@@ -796,7 +796,7 @@
                 <span class="${symbolClass}">${esc(item.tradingSymbol || item.input)}</span>
                 <span class="exchange-pill">${esc(item.exchange)}</span>
               </div>
-              <div class="updated-under-symbol">${formatShortDate(item.updatedAt)}</div>
+              <div class="updated-under-symbol">LTT ${formatShortDateTime(item.lastTradedTime || item.updatedAt)}</div>
             </div>
 
             <div class="price-area">
@@ -1140,22 +1140,15 @@
       return yyyy + mm + dd + '-' + hh + mi + ss;
     }
 
-function formatShortDate(value) {
+function formatShortDateTime(value) {
   if (!value) return '';
 
   const text = String(value).trim();
 
-  // Handles format like: 2026-05-13 14:31:20
   const match = text.match(/^(\d{4})-(\d{2})-(\d{2})\s+(\d{2}):(\d{2})/);
 
   if (match) {
-    const yy = match[1].slice(-2);
-    const mm = match[2];
-    const dd = match[3];
-    const hh = match[4];
-    const min = match[5];
-
-    return dd + '-' + mm + '-' + yy + ' ' + hh + ':' + min;
+    return match[3] + '-' + match[2] + '-' + match[1].slice(-2) + ' ' + match[4] + ':' + match[5];
   }
 
   const d = new Date(text);
@@ -1172,7 +1165,6 @@ function formatShortDate(value) {
 
   return dd + '-' + mm + '-' + yy + ' ' + hh + ':' + min;
 }
-
     function rangePosition(low, high, value) {
       low = Number(low || 0);
       high = Number(high || 0);
